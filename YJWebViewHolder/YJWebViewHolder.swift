@@ -9,14 +9,14 @@
 import UIKit
 import WebKit
 
-enum YJWebViewKeyPath: String {
+public enum YJWebViewKeyPath: String {
 	case none
 	case loading
 	case title
 	case estimatedProgress
 }
 
-@objc protocol YJWebViewHolderDelegate: NSObjectProtocol {
+@objc public protocol YJWebViewHolderDelegate: NSObjectProtocol {
 	@objc optional func didReceive(_ webView: WKWebView, message: WKScriptMessage)
 	@objc optional func decidePolicy(_ webView: WKWebView, forNavigationAction action: WKNavigationAction, handler: (WKNavigationActionPolicy)->Void)
 	@objc optional func didStartLoad(_ webView: WKWebView)
@@ -24,13 +24,13 @@ enum YJWebViewKeyPath: String {
 	@objc optional func didChanged(_ webView: WKWebView, keyPath: String, value: Any?)
 }
 
-final class YJWebViewHolder: NSObject {
+public final class YJWebViewHolder: NSObject {
 	
 	fileprivate let config: WKWebViewConfiguration = WKWebViewConfiguration()
 	
 	fileprivate var webView: YJWebView!
 	
-	var webV: UIView {
+	public var webV: UIView {
 		get {
 			return webView
 		}
@@ -38,7 +38,7 @@ final class YJWebViewHolder: NSObject {
 	
 	fileprivate var progressView: UIProgressView = UIProgressView(progressViewStyle: .default)
 	
-	var progressV: UIView {
+	public var progressV: UIView {
 		get {
 			return progressView
 		}
@@ -59,7 +59,7 @@ final class YJWebViewHolder: NSObject {
 
 extension YJWebViewHolder {
 	
-	convenience init<T: UIViewController>(_ owner: T, configHandler: ((WKWebViewConfiguration)->[String]?)? = nil) where T: YJWebViewHolderDelegate {
+	public convenience init<T: UIViewController>(_ owner: T, configHandler: ((WKWebViewConfiguration)->[String]?)? = nil) where T: YJWebViewHolderDelegate {
 		self.init()
 		self.owner = owner
 		
@@ -77,7 +77,7 @@ extension YJWebViewHolder {
 		webView.addObserver(self, forKeyPath: YJWebViewKeyPath.estimatedProgress.rawValue, options: .new, context: nil)
 	}
 	
-	func loadURL(_ urlStr: String) {
+	public func loadURL(_ urlStr: String) {
 		
 		guard let url = URL(string: urlStr) else { return }
 		
@@ -86,7 +86,7 @@ extension YJWebViewHolder {
 		self.webView.load(request)
 	}
 	
-	override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+	override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
 		
 		guard let keyPath = keyPath else { return }
 		
@@ -108,7 +108,7 @@ extension YJWebViewHolder {
 }
 
 extension YJWebViewHolder: WKNavigationDelegate {
-	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+	public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
 		if owner.responds(to: #selector(YJWebViewHolderDelegate.decidePolicy(_:forNavigationAction:handler:))) {
 			owner.decidePolicy!(webView, forNavigationAction: navigationAction, handler: decisionHandler)
 		} else {
@@ -116,25 +116,25 @@ extension YJWebViewHolder: WKNavigationDelegate {
 		}
 	}
 	
-	func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+	public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
 		owner.didStartLoad?(webView)
 	}
 	
-	func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+	public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
 		owner.didFinishLoad?(webView, error: nil)
 	}
 	
-	func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+	public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
 		owner.didFinishLoad?(webView, error: error)
 	}
 }
 
 extension YJWebViewHolder: WKUIDelegate {
-	func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+	public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
 		YJEasyAlert.show(from: owner as! UIViewController)
 	}
 	
-	func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+	public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
 		YJEasyAlert.show(message, actions: [
 			{ () -> (String?, UIAlertActionStyle, ((UIAlertAction) -> ())?) in
 				return ("取消", .cancel, {(_)->() in
@@ -151,7 +151,7 @@ extension YJWebViewHolder: WKUIDelegate {
 }
 
 extension YJWebViewHolder: WKScriptMessageHandler {
-	func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+	public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
 		owner.didReceive?(webView, message: message)
 	}
 }
@@ -167,12 +167,12 @@ extension WKWebViewConfiguration {
 		return jsObjFromString(jsStr: jsStr)
 	}
 	
-	func addJs(_ js: String) {
+	public func addJs(_ js: String) {
 		let script = jsObjFromString(jsStr: js)
 		userContentController.addUserScript(script)
 	}
 	
-	func addJsFromFile(_ filePath: String) -> Bool {
+	public func addJsFromFile(_ filePath: String) -> Bool {
 		guard let script = jsObjFromFile(filePath: filePath) else { return false }
 		userContentController.addUserScript(script)
 		return true
