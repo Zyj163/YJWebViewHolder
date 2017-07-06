@@ -1,12 +1,12 @@
 Pod::Spec.new do |s|
 
 s.name = 'YJWebViewHolder'
-s.version = '1.0.0'
+s.version = '1.1.0'
 s.license = { :type => "MIT", :file => "LICENSE" }
 s.summary = 'easy use WKWebView in Swift'
 
 s.description  = <<-DESC
-easy to use WKWebView in Swift
+easy to use WKWebView/Alert in Swift
 DESC
 
 s.homepage = 'https://github.com/Zyj163/YJWebViewHolder'
@@ -16,6 +16,12 @@ s.source = { :git => 'https://github.com/Zyj163/YJWebViewHolder.git', :tag => s.
 s.ios.deployment_target = '8.0'
 
 s.source_files = 'YJWebViewHolder/*.swift'
+
+s.subspec 'YJEasyAlert' do |y|
+y.source_files = 'YJWebViewHolder/YJEasyAlert.swift'
+y.frameworks = 'UIKit'
+y.requires_arc = true
+end
 
 s.requires_arc = true
 s.frameworks = "UIKit", "WebKit"

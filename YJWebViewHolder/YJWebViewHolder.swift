@@ -135,18 +135,10 @@ extension YJWebViewHolder: WKUIDelegate {
 	}
 	
 	public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
-		YJEasyAlert.show(message, actions: [
-			{ () -> (String?, UIAlertActionStyle, ((UIAlertAction) -> ())?) in
-				return ("取消", .cancel, {(_)->() in
-					completionHandler(false)
-				})
-			},
-			{ () -> (String?, UIAlertActionStyle, ((UIAlertAction) -> ())?) in
-				return ("确认", .default, {(_)->() in
-					completionHandler(true)
-				})
-			}
-		], from: owner as! UIViewController)
+        
+        YJEasyAlert.show(from: owner as! UIViewController, withTitle: nil, message: message, options: [.confirm, .cancel]) { (opt: YJEasyAlertOptions) in
+            completionHandler(opt.contains(.confirm))
+        }
 	}
 }
 
