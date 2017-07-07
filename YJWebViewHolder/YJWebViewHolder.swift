@@ -131,14 +131,15 @@ extension YJWebViewHolder: WKNavigationDelegate {
 
 extension YJWebViewHolder: WKUIDelegate {
 	public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
-		YJEasyAlert.show(from: owner as! UIViewController)
-	}
+		YJEasyAlert.alert(from: owner as! UIViewController)
+    }
 	
 	public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
         
-        YJEasyAlert.show(from: owner as! UIViewController, withTitle: nil, message: message, options: [.confirm, .cancel]) { (opt: YJEasyAlertOptions) in
-            completionHandler(opt.contains(.confirm))
-        }
+        YJEasyAlert.easyAlert(from: owner as! UIViewController, message: message, actions: [
+            .easyAck({completionHandler(true)}),
+            .easyCancel({completionHandler(false)})
+            ])
 	}
 }
 

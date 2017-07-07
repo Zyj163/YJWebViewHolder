@@ -8,85 +8,150 @@
 
 import UIKit
 
-public struct YJEasyAlertOptions : OptionSet {
+public enum YJEasyAlertAction {
     
-    public typealias RawValue = UInt
+    case ack(String?, UIAlertActionStyle?, (() -> Void)?)
+    case cancel(String?, UIAlertActionStyle?, (() -> Void)?)
+    case delete(String?, UIAlertActionStyle?, (() -> Void)?)
     
-    public var rawValue: YJEasyAlertOptions.RawValue
+    case easyAck((() -> Void)?)
+    case easyCancel((() -> Void)?)
+    case easyDelete((() -> Void)?)
     
-    public init(rawValue: UInt) {
-        self.rawValue = rawValue
+    var text: String {
+        switch self {
+        case .ack(let text, _, _):
+            return text ?? "确认"
+        case .cancel(let text, _, _):
+            return text ?? "取消"
+        case .delete(let text, _, _):
+            return text ?? "删除"
+        case .easyAck:
+            return "确认"
+        case .easyCancel:
+            return "取消"
+        case .easyDelete:
+            return "删除"
+        }
     }
     
-    public static var confirm: YJEasyAlertOptions {
-        return YJEasyAlertOptions(rawValue: 0x01)
+    var action: (() -> Void)? {
+        switch self {
+        case .ack(_, _, let a), .cancel(_, _, let a), .delete(_, _, let a), .easyAck(let a), .easyCancel(let a), .easyDelete(let a):
+            return a
+        }
     }
     
-    public static var cancel: YJEasyAlertOptions {
-        return YJEasyAlertOptions(rawValue: 0x02)
+    var style: UIAlertActionStyle {
+        switch self {
+        case .ack(_, let style, _):
+            return style ?? .default
+        case .cancel(_, let style, _):
+            return style ?? .cancel
+        case .delete(_, let style, _):
+            return style ?? .destructive
+        case .easyAck:
+            return .default
+        case .easyCancel:
+            return .cancel
+        case .easyDelete:
+            return .destructive
+        }
     }
 }
 
 public class YJEasyAlert {
     
-	/// alert
+	/// 警告框
 	///
-	/// - Parameters:
+    /// - Parameters:
+    ///   - from: 从哪个控制器modal
 	///   - title: title
 	///   - message: message
-	///   - actions: 闭包数组，每个闭包的返回值是(String?, UIAlertActionStyle, ((UIAlertAction) -> ())?)，其中第一个参数是按钮文字，第二个参数是按钮style，第三个是按钮触发的动作（闭包）
-	///   - from: 从那个控制器modal
+    ///   - actions: 闭包数组，每个闭包的返回值是(String?, UIAlertActionStyle, (() -> ())?)，其中第一个参数是按钮文字，第二个参数是按钮style，第三个是按钮触发的动作（闭包）
+    ///   - inputs: 配置输入框
     /// - Example: 
     /**
      YJEasyAlert.show(message, actions:
      [
-        { () -> (String?, UIAlertActionStyle, ((UIAlertAction) -> ())?) in
-            return ("取消", .cancel, {(_)->() in
-					completionHandler(false)
-            })
+        { () -> (String?, UIAlertActionStyle, (() -> ())?) in
+            return ("取消", .cancel, {})
         },
-        { () -> (String?, UIAlertActionStyle, ((UIAlertAction) -> ())?) in
-            return ("确认", .default, {(_)->() in
-					completionHandler(true)
-            })
+        { () -> (String?, UIAlertActionStyle, (() -> ())?) in
+            return ("确认", .default, {})
         }
-     ], from: owner as! UIViewController)
+     ], from: vc)
      */
-	public class func show(from: UIViewController, withTitle title: String? = nil, message: String? = nil, actions: [()->(String?, UIAlertActionStyle, ((UIAlertAction)->())?)]? = nil) {
-		
+    @discardableResult
+    public class func alert(from: UIViewController, withTitle title: String? = nil, message: String? = nil, actions: [()->(String?, UIAlertActionStyle, (()->())?)]? = nil, inputs: [((UITextField)->Void)?]? = nil) -> UIAlertController {
+        
 		let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-		actions?.forEach { (actionGenerator) in
-			let (actionTitle, actionStyle, action) = actionGenerator()
-			let a = UIAlertAction(title: actionTitle, style: actionStyle, handler: action)
-			alert.addAction(a)
-		}
-		
-		if actions?.count == 0 {
-			let a = UIAlertAction(title: "确定", style: .default, handler: nil)
-			alert.addAction(a)
-		}
-		
-		from.present(alert, animated: true, completion: nil)
+		return alertController(alert, from: from, withTitle: title, message: message, actions: actions, inputs: inputs)
 	}
     
-    public class func show(from: UIViewController, withTitle title: String? = nil, message: String? = nil, options: YJEasyAlertOptions = [.confirm, .cancel], action: ((YJEasyAlertOptions)->())?) {
+    @discardableResult
+    public class func actionSheet(from: UIViewController, withTitle title: String? = nil, message: String? = nil, actions: [()->(String?, UIAlertActionStyle, (()->())?)]? = nil, inputs: [((UITextField)->Void)?]? = nil) -> UIAlertController {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+        return alertController(alert, from: from, withTitle: title, message: message, actions: actions, inputs: inputs)
+    }
+    
+    /// 警告框
+    ///
+    /// - Parameters:
+    ///   - from: 从哪个控制器modal
+    ///   - title: title
+    ///   - message: message
+    ///   - actions: [YJEasyAlertAction]，默认是一个没有动作的确认键
+    ///   - inputs: 配置输入框
+    @discardableResult
+    public class func easyAlert(from: UIViewController, withTitle title: String? = nil, message: String? = nil, actions: [YJEasyAlertAction] = [.easyAck(nil)], inputs: [((UITextField)->Void)?]? = nil) -> UIAlertController {
         
-        var actions = [()->(String?, UIAlertActionStyle, ((UIAlertAction)->())?)]()
-        if options.contains(.confirm) {
-            actions.append({ () -> (String?, UIAlertActionStyle, ((UIAlertAction) -> ())?) in
-                return ("确认", .default, { (_)->() in
-                    action?(.confirm)
-                })
-            })
+        let actions = generateActions(actions)
+        return alert(from: from, withTitle: title, message: message, actions: actions, inputs: inputs)
+    }
+    
+    @discardableResult
+    public class func easyActionSheet(from: UIViewController, withTitle title: String? = nil, message: String? = nil, actions: [YJEasyAlertAction] = [.easyAck(nil)], inputs: [((UITextField)->Void)?]? = nil) -> UIAlertController {
+        
+        let actions = generateActions(actions)
+        return actionSheet(from: from, withTitle: title, message: message, actions: actions, inputs: inputs)
+    }
+    
+    fileprivate class func generateActions(_ actions: [YJEasyAlertAction])->[()->(String?, UIAlertActionStyle, (()->())?)]? {
+        return actions.map { (action: YJEasyAlertAction) -> ()->(String?, UIAlertActionStyle, (()->())?) in
+            switch action {
+            case let .ack(text, style, act), let .cancel(text, style, act), let .delete(text, style, act):
+                return {(text, style ?? action.style, act ?? action.action)}
+            case let .easyAck(act), let .easyCancel(act), let .easyDelete(act):
+                return {(action.text, action.style, act ?? action.action)}
+            }
         }
-        if options.contains(.cancel) {
-            actions.append({ () -> (String?, UIAlertActionStyle, ((UIAlertAction) -> ())?) in
-                return ("确认", .default, { (_)->() in
-                    action?(.cancel)
-                })
-            })
+    }
+    
+    fileprivate class func alertController(_ alert: UIAlertController, from: UIViewController, withTitle title: String? = nil, message: String? = nil, actions: [()->(String?, UIAlertActionStyle, (()->())?)]? = nil, inputs: [((UITextField)->Void)?]? = nil) -> UIAlertController {
+        
+        actions?.forEach { (actionGenerator) in
+            let (actionTitle, actionStyle, action) = actionGenerator()
+            var handler: ((UIAlertAction)->Void)?
+            if let action = action {
+                handler = { (_)->Void in
+                    action()
+                }
+            }
+            let a = UIAlertAction(title: actionTitle, style: actionStyle, handler: handler)
+            alert.addAction(a)
         }
-        show(from: from, withTitle: title, message: message, actions: actions)
+        
+        if actions?.count == 0 {
+            let a = UIAlertAction(title: "确定", style: .default, handler: nil)
+            alert.addAction(a)
+        }
+        
+        inputs?.forEach {alert.addTextField(configurationHandler: $0)}
+        
+        from.present(alert, animated: true, completion: nil)
+        
+        return alert
     }
 }
 
