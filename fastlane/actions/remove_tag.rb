@@ -45,17 +45,17 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :tag,
                                        description: "tag name",
 									   is_string: true,
-									   options: false
+									   optional: false
 									   ),
           FastlaneCore::ConfigItem.new(key: :rl,
                                        description: "是否删除本地标签",
-									   options: true,
+									   optional: true,
                                        is_string: false,
                                        default_value: true),
 		FastlaneCore::ConfigItem.new(key: :rr,
 										description: "是否删除原创标签",
 										is_string: false,
-										options: true,
+										optional: true,
 										default_value: true
 										)
         ]
@@ -74,7 +74,7 @@ module Fastlane
       end
 #支持的平台
       def self.is_supported?(platform)
-        platform == :ios
+        [:ios, :mac].include? platform
       end
     end
   end
