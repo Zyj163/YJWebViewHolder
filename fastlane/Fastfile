@@ -14,6 +14,9 @@ git_commit(path: ".", message: "#{commitMessage}xx")
 push_to_git_remote
 
 #3. git tag ""  git push --tags
+if git_tag_exists(tag: tagName)
+remove_tag(tag: tagName)
+end
 add_git_tag(
 tag: tagName
 )
