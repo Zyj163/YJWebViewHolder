@@ -154,21 +154,3 @@ public class YJEasyAlert {
         return alert
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
