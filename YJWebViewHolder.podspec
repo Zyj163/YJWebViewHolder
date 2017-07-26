@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
 s.name = 'YJWebViewHolder'
-s.version = '1.2.1'
+s.version = '1.2.2'
 s.license = { :type => "MIT", :file => "LICENSE" }
 s.summary = 'easy use WKWebView in Swift'
 

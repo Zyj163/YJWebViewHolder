@@ -6,6 +6,13 @@ commitMessage = options[:message]
 
 #actions
 
+#1. carthage
+carthage(
+command: "build",
+no_skip_current: true,
+platform: "iOS"
+)
+
 #2. git add .    git commit -m "xx"    git push origin master
 git_add(path: ".")
 
@@ -25,5 +32,6 @@ push_git_tags
 #4. pod spec lint      pod trunk push
 pod_lib_lint(allow_warnings: true)
 pod_push
+
 
 end
